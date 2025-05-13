@@ -111,6 +111,11 @@ void log_print_buf(const uint8_t *b, size_t len);
 #define log_d(format, ...) log_printf(ARDUHAL_LOG_FORMAT(D, format), ##__VA_ARGS__)
 #define isr_log_d(format, ...) ets_printf(ARDUHAL_LOG_FORMAT(D, format), ##__VA_ARGS__)
 #define log_buf_d(b,l) do{ARDUHAL_LOG_COLOR_PRINT(D);log_print_buf(b,l);ARDUHAL_LOG_COLOR_PRINT_END;}while(0)
+#define log_t(tag, format, ...) do { \
+    if (tag == 1) { \
+        log_printf(ARDUHAL_LOG_FORMAT(D, "[" #tag "] " format), ##__VA_ARGS__); \
+    } \
+} while (0)
 #else
 #define log_d(format, ...) do {ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG, TAG, format, ##__VA_ARGS__);}while(0)
 #define isr_log_d(format, ...) do {ets_printf(LOG_FORMAT(D, format), esp_log_timestamp(), TAG, ##__VA_ARGS__);}while(0)
