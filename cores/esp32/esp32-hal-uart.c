@@ -412,6 +412,47 @@ int uartGetDebug()
     return s_uart_debug_nr;
 }
 
+int log_vprintf(const char *fmt, va_list ap)
+{
+    static char loc_buf[64];
+    char *temp = loc_buf;
+
+    // 1) measure
+    va_list ap_copy;
+    va_copy(ap_copy, ap);
+    int len = vsnprintf(NULL, 0, fmt, ap_copy);
+    va_end(ap_copy);
+    if (len < 0) return 0;
+
+    // 2) grow if needed
+    if (len >= (int)sizeof(loc_buf)) {
+        temp = (char *)malloc(len + 1);
+        if (!temp) return 0;
+    }
+
+    // 3) lock (same as your log_printf)
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if (s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock) {
+        xSemaphoreTake(_uart_bus_array[s_uart_debug_nr].lock, portMAX_DELAY);
+    }
+#endif
+
+    // 4) format + print
+    // Note: we only consumed ap_copy above; 'ap' is still valid here.
+    vsnprintf(temp, len + 1, fmt, ap);
+    ets_printf("%s", temp);
+
+    // 5) unlock
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if (s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock) {
+        xSemaphoreGive(_uart_bus_array[s_uart_debug_nr].lock);
+    }
+#endif
+
+    if (temp != loc_buf) free(temp);
+    return len;
+}
+
 int log_printf(const char *format, ...)
 {
     static char loc_buf[64];
