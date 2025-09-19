@@ -34,6 +34,10 @@ namespace fs
 
 class SDMMCFS : public FS
 {
+public:
+    sdmmc_card_t *getCard(){
+        return _card;
+    }
 protected:
     sdmmc_card_t* _card;
 
