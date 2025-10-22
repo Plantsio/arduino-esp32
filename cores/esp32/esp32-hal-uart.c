@@ -464,9 +464,13 @@ int log_printf(const char *format, ...)
     va_copy(copy, arg);
     len = vsnprintf(NULL, 0, format, copy);
     va_end(copy);
-    if(len >= sizeof(loc_buf)){
-        temp = (char*)malloc(len+1);
-        if(temp == NULL) {
+    if (len >= sizeof(loc_buf)) {
+        temp = (char*)heap_caps_malloc(len + 1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+//        if (!temp) {
+//            // Fallback to internal 8-bit RAM if PSRAM is exhausted
+//            temp = (char*)heap_caps_malloc(len + 1, MALLOC_CAP_8BIT);
+//        }
+        if (!temp) {
             va_end(arg);
             return 0;
         }
@@ -487,7 +491,7 @@ int log_printf(const char *format, ...)
 #endif
     va_end(arg);
     if(len >= sizeof(loc_buf)){
-        free(temp);
+        heap_caps_free(temp);
     }
     return len;
 }
