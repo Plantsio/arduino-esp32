@@ -120,7 +120,7 @@ bool SDMMCFS::begin(const char * mountpoint, bool mode1bit, bool format_if_mount
         slot_config.width = 1;
     }
 
-    host.command_timeout_ms = 2000;    // set common timeout
+    host.command_timeout_ms = 5000;    // set common timeout
 
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = format_if_mount_failed,
