@@ -963,7 +963,12 @@ esp_err_t WiFiGenericClass::_eventCallback(arduino_event_t *event)
             WiFiSTAClass::_setStatus(WL_DISCONNECTED);
         }
         clearStatusBits(STA_CONNECTED_BIT | STA_HAS_IP_BIT | STA_HAS_IP6_BIT);
-        if(first_connect && ((reason == WIFI_REASON_AUTH_EXPIRE) ||
+        /* [Ivy] 原条件不含 getAutoReconnect()，因此这个分支会绕过 setAutoReconnect(false)：
+         * first_connect 是每次开机只烧一次的 static，只要首个断连 reason >= 200 就无条件
+         * disconnect + begin。配网期间这一定会命中，等于 Arduino 在 TuyaOS 配网中途夺取
+         * WiFi 栈控制权（begin() 还会经 enableSTA 改工作模式、重置 STA netif 的 DHCP）。
+         * 本工程的连接发起权归 TuyaOS，故让该分支服从既有的 autoReconnect 开关。 */
+        if(first_connect && WiFi.getAutoReconnect() && ((reason == WIFI_REASON_AUTH_EXPIRE) ||
         (reason >= WIFI_REASON_BEACON_TIMEOUT)))
         {
             log_d("WiFi Reconnect Running");

@@ -120,11 +120,21 @@ void log_print_buf(const uint8_t *b, size_t len);
 #define log_d(format, ...) do {ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG, TAG, format, ##__VA_ARGS__);}while(0)
 #define isr_log_d(format, ...) do {ets_printf(LOG_FORMAT(D, format), esp_log_timestamp(), TAG, ##__VA_ARGS__);}while(0)
 #define log_buf_d(b,l) do {ESP_LOG_BUFFER_HEXDUMP(TAG, b, l, ESP_LOG_DEBUG);}while(0)
+/* [Ivy] log_t 是本项目自定义的分组调试宏，原先只在 !USE_ESP_IDF_LOG 分支里有定义，
+ * 走 ESP-IDF 日志实现时会缺失，这里补齐 */
+#define log_t(tag, format, ...) do { \
+    if (tag == 1) { \
+        ESP_LOG_LEVEL_LOCAL(ESP_LOG_DEBUG, TAG, "[" #tag "] " format, ##__VA_ARGS__); \
+    } \
+} while (0)
 #endif
 #else
 #define log_d(format, ...)  do {} while(0)
 #define isr_log_d(format, ...) do {} while(0)
 #define log_buf_d(b,l) do {} while(0)
+/* [Ivy] 日志级别低于 DEBUG 时 log_t 原先直接消失，导致所有调用点编译失败。
+ * 它和 log_d 同级，关闭时同样需要空实现 */
+#define log_t(tag, format, ...) do {} while(0)
 #endif
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
